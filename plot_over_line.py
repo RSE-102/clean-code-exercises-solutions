@@ -5,14 +5,10 @@ from matplotlib.pyplot import plot, show, close
 from raster_grid import RasterGrid, Point
 
 
-DataArray = List[List[float]]
-PlotOverLineData = Tuple[List[float], List[float]]
-
-
 class RasterFunction:
     def __init__(self,
                  raster: RasterGrid,
-                 values: DataArray) -> None:
+                 values: List[List[float]]) -> None:
         self._raster = raster
         self._values = values
 
@@ -21,47 +17,34 @@ class RasterFunction:
         return self._values[cell.col_index][cell.row_index] if cell else nan
 
 
-class PlotOverLine:
-    def __init__(self,
-                 source: Point,
-                 target: Point,
-                 num_samples: int = 1000) -> None:
-        self._source = source
-        self._num_samples = num_samples
-        self._step = (
-            (target.x - source.x)/(num_samples - 1),
-            (target.y - source.y)/(num_samples - 1)
-        )
-
-    def make_plot_data(self, function: Callable[[Point], float]) -> PlotOverLineData:
-        x_values, y_values = [], []
-        for i in range(self._num_samples):
-            position = Point(
-                self._source.x + self._step[0]*i,
-                self._source.y + self._step[1]*i
-            )
-            x_values.append(self._distance(position))
-            y_values.append(function(position))
-        return x_values, y_values
-
-    def _distance(self, position: Point) -> float:
-        dx = position.x - self._source.x
-        dy = position.y - self._source.y
-        return sqrt(dx*dx + dy*dy)
+def discretize(function: Callable[[Point], float],
+               source: Point,
+               target: Point,
+               num_samples: int = 1000) -> Tuple[List[float], List[float]]:
+    step = (
+        (target.x - source.x)/(num_samples - 1),
+        (target.y - source.y)/(num_samples - 1)
+    )
+    x_values, y_values = [], []
+    for i in range(num_samples):
+        dx, dy = step[0]*float(i), step[1]*float(i)
+        position = Point(source.x + dx, source.y + dy)
+        x_values.append(sqrt(dx*dx + dy*dy))
+        y_values.append(function(position))
+    return x_values, y_values
 
 
 def plot_over_line(function: Callable[[Point], float],
                    source: Point,
                    target: Point,
                    number_of_samples: int = 1000) -> None:
-    pol = PlotOverLine(source, target, number_of_samples)
-    x, y = pol.make_plot_data(function)
+    x, y = discretize(function, source, target, number_of_samples)
     plot(x, y)
     show()
     close()
 
 
-def _get_discrete_values(grid: RasterGrid) -> DataArray:
+def _get_discrete_values(grid: RasterGrid) -> List[List[float]]:
     def function(p: Point):
         return sin(2.0*pi*p.x)*cos(2.0*pi*p.y)
     discrete_values = [
