@@ -79,13 +79,11 @@ class RasterGrid:
 
 
 def test_number_of_cells() -> None:
-    p0 = Point(0.0, 0.0)
-    dx = 1.0
-    dy = 1.0
-    assert RasterGrid(p0, (dx, dy), (10, 10)).number_of_cells == 100
-    assert RasterGrid(p0, (dx, dy), (10, 20)).number_of_cells == 200
-    assert RasterGrid(p0, (dx, dy), (20, 10)).number_of_cells == 200
-    assert RasterGrid(p0, (dx, dy), (20, 20)).number_of_cells == 400
+    extent = (1.0, 1.0)
+    origin = Point(0.0, 0.0)
+    for nx, ny in zip([10, 10, 20, 20], [10, 20, 10, 20]):
+        grid = RasterGrid(origin, extent, (nx, ny))
+        assert grid.number_of_cells == nx*ny
 
 
 def test_locate_cell() -> None:
@@ -94,18 +92,17 @@ def test_locate_cell() -> None:
         size=(2.0, 2.0),
         resolution=(2, 2)
     )
-    cell = grid.locate(Point(0, 0))
-    assert cell and cell.col_index == 0 and cell.row_index == 0
-    cell = grid.locate(Point(1, 1))
-    assert cell and cell.col_index == 1 and cell.row_index == 1
-    cell = grid.locate(Point(0.5, 0.5))
-    assert cell and cell.col_index == 0 and cell.row_index == 0
-    cell = grid.locate(Point(1.5, 0.5))
-    assert cell and cell.col_index == 1 and cell.row_index == 0
-    cell = grid.locate(Point(0.5, 1.5))
-    assert cell and cell.col_index == 0 and cell.row_index == 1
-    cell = grid.locate(Point(1.5, 1.5))
-    assert cell and cell.col_index == 1 and cell.row_index == 1
+
+    for coords, expected_indices in [
+        ((0.0, 0.0), (0, 0)),
+        ((1.0, 1.0), (1, 1)),
+        ((0.5, 0.5), (0, 0)),
+        ((1.5, 0.5), (1, 0)),
+        ((0.5, 1.5), (0, 1)),
+        ((1.5, 1.5), (1, 1))
+    ]:
+        cell = grid.locate(Point(coords[0], coords[1]))
+        assert cell and cell.col_index == expected_indices[0] and cell.row_index == expected_indices[1]
 
 
 def test_cell_iterator() -> None:
@@ -129,14 +126,10 @@ def test_cell_center():
         size=(2.0, 2.0),
         resolution=(2, 2)
     )
-    cell = grid.locate(Point(0.5, 0.5))
-    assert cell and _is_equal(grid.center(cell), Point(0.5, 0.5))
-    cell = grid.locate(Point(1.5, 0.5))
-    assert cell and _is_equal(grid.center(cell), Point(1.5, 0.5))
-    cell = grid.locate(Point(0.5, 1.5))
-    assert cell and _is_equal(grid.center(cell), Point(0.5, 1.5))
-    cell = grid.locate(Point(1.5, 1.5))
-    assert cell and _is_equal(grid.center(cell), Point(1.5, 1.5))
+    for coords in [(0.5, 0.5), (1.5, 0.5), (0.5, 1.5), (1.5, 1.5)]:
+        point = Point(coords[0], coords[1])
+        cell = grid.locate(point)
+        assert cell and _is_equal(grid.center(cell), point)
 
 
 def _is_equal(p0: Point, p1: Point) -> bool:
