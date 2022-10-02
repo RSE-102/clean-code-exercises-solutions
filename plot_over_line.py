@@ -17,28 +17,44 @@ class RasterFunction:
         return self._values[cell.col_index][cell.row_index] if cell else nan
 
 
-def discretize(function: Callable[[Point], float],
-               source: Point,
-               target: Point,
-               num_samples: int = 1000) -> Tuple[List[float], List[float]]:
+class Line:
+    def __init__(self, source: Point, target: Point) -> None:
+        self._points = (source, target)
+
+    @property
+    def source(self) -> Point:
+        return self._points[0]
+
+    @property
+    def target(self) -> Point:
+        return self._points[1]
+
+
+def discretize(line: Line, number_of_samples: int) -> List[Point]:
     step = (
-        (target.x - source.x)/(num_samples - 1),
-        (target.y - source.y)/(num_samples - 1)
+        (line.target.x - line.source.x)/(number_of_samples - 1),
+        (line.target.y - line.source.y)/(number_of_samples - 1)
     )
-    x_values, y_values = [], []
-    for i in range(num_samples):
-        dx, dy = step[0]*float(i), step[1]*float(i)
-        position = Point(source.x + dx, source.y + dy)
-        x_values.append(sqrt(dx*dx + dy*dy))
-        y_values.append(function(position))
-    return x_values, y_values
+    return [
+        Point(
+            line.source.x + step[0]*float(i),
+            line.source.y + step[1]*float(i)
+        ) for i in range(number_of_samples)
+    ]
+
+
+def distance(p0: Point, p1: Point) -> float:
+    dx = p1.x - p0.x
+    dy = p1.y - p0.y
+    return sqrt(dx*dx + dy*dy)
 
 
 def plot_over_line(function: Callable[[Point], float],
-                   source: Point,
-                   target: Point,
+                   line: Line,
                    number_of_samples: int = 1000) -> None:
-    x, y = discretize(function, source, target, number_of_samples)
+    points = discretize(line, number_of_samples)
+    x = [distance(points[0], p) for p in points]
+    y = [function(p) for p in points]
     plot(x, y)
     show()
     close()
@@ -66,7 +82,9 @@ if __name__ == "__main__":
     raster_function = RasterFunction(grid, values)
     plot_over_line(
         function=raster_function,
-        source=Point(0.0, 0.0),
-        target=Point(1.0, 1.0),
+        line=Line(
+            Point(0.0, 0.0),
+            Point(1.0, 1.0)
+        ),
         number_of_samples=2000
     )
