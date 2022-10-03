@@ -1,4 +1,4 @@
-from typing import Tuple, Iterable, Callable
+from typing import Tuple, Iterable, Callable, Protocol
 from dataclasses import dataclass
 import matplotlib.pyplot as plt
 
@@ -9,7 +9,12 @@ class Point:
     y: float
 
 
-class Discretization:
+class Lattice(Protocol):
+    def points(self) -> Iterable[Point]:
+        ...
+
+
+class SquareLattice:
     def __init__(self,
                  lower_left: Point,
                  size: Tuple[float, float],
@@ -35,7 +40,7 @@ class Discretization:
 
 class FieldPlot:
     def __init__(self,
-                 discretization: Discretization,
+                 discretization: SquareLattice,
                  field: Callable[[Point], float]) -> None:
         x, y, z = [], [], []
         for p in discretization.points():
@@ -58,12 +63,12 @@ class FieldPlot:
 # the coordinates at which the field is not defined
 class MyFieldPlot:
     def __init__(self, resolution: Tuple[int, int]) -> None:
-        discretization = Discretization(
+        point_cloud = SquareLattice(
             lower_left=Point(1.0, 1.0),
             size=(4.0, 4.0),
             resolution=resolution
         )
-        self._field_plot = FieldPlot(discretization, self._evaluate_field)
+        self._field_plot = FieldPlot(point_cloud, self._evaluate_field)
 
     def show(self) -> None:
         self._field_plot.show()
