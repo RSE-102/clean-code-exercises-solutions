@@ -40,10 +40,10 @@ class SquareLattice:
 
 class FieldPlot:
     def __init__(self,
-                 discretization: SquareLattice,
+                 lattice: Lattice,
                  field: Callable[[Point], float]) -> None:
         x, y, z = [], [], []
-        for p in discretization.points():
+        for p in lattice.points():
             x.append(p.x)
             y.append(p.y)
             z.append(field(p))
@@ -83,4 +83,3 @@ if __name__ == "__main__":
         resolution=(25, 25)
     )
     plot.show()
-
