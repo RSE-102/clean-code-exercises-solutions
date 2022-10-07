@@ -79,7 +79,5 @@ class MyFieldPlot:
 
 
 if __name__ == "__main__":
-    plot = MyFieldPlot(
-        resolution=(25, 25)
-    )
+    plot = MyFieldPlot(resolution=(25, 25))
     plot.show()
